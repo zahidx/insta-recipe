@@ -1,15 +1,28 @@
 "use client";
 import Head from 'next/head';
 import { useState } from 'react';
+import RandomRecipes from './pages/RandomRecipes';
+import TrendingRecipe from './pages/TrendingRecipe';
+import MealPlanning from './pages/MealPlanning';
+import FoodTrivia from './pages/FoodTrivia';
+import PriceBreakdown from './pages/PriceBreakdown';
 
 const Home = () => {
   const [ingredients, setIngredients] = useState('');
+  const [diet, setDiet] = useState('');
+  const [cuisines, setCuisines] = useState('');
+  const [intolerances, setIntolerances] = useState('');
+  const [mealType, setMealType] = useState('');
+  const [maxCalories, setMaxCalories] = useState('');
+  const [minCalories, setMinCalories] = useState('');
+  const [maxPreparationTime, setMaxPreparationTime] = useState('');
+  const [minPreparationTime, setMinPreparationTime] = useState('');
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [selectedRecipe, setSelectedRecipe] = useState(null);  // For holding selected recipe
-  const [recipeDetails, setRecipeDetails] = useState(null);  // For holding detailed recipe information
-  const [isModalLoading, setIsModalLoading] = useState(false);  // To handle modal loading state
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [recipeDetails, setRecipeDetails] = useState(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
 
   const handleSearch = async () => {
     if (!ingredients) {
@@ -21,7 +34,16 @@ const Home = () => {
     setError('');
 
     const apiKey = process.env.NEXT_PUBLIC_SPOONACULAR_API_KEY;
-    const url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${apiKey}&query=${ingredients}&number=6`;
+    let url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${apiKey}&query=${ingredients}&number=6`;
+
+    if (diet) url += `&diet=${diet}`;
+    if (cuisines) url += `&cuisines=${cuisines}`;
+    if (intolerances) url += `&intolerances=${intolerances}`;
+    if (mealType) url += `&type=${mealType}`;
+    if (maxCalories) url += `&maxCalories=${maxCalories}`;
+    if (minCalories) url += `&minCalories=${minCalories}`;
+    if (maxPreparationTime) url += `&maxReadyTime=${maxPreparationTime}`;
+    if (minPreparationTime) url += `&minReadyTime=${minPreparationTime}`;
 
     try {
       const response = await fetch(url);
@@ -41,7 +63,7 @@ const Home = () => {
   };
 
   const handleViewRecipe = async (recipe) => {
-    setIsModalLoading(true); // Set modal loading state to true
+    setIsModalLoading(true);
 
     const apiKey = process.env.NEXT_PUBLIC_SPOONACULAR_API_KEY;
     const url = `https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${apiKey}`;
@@ -50,12 +72,12 @@ const Home = () => {
       const response = await fetch(url);
       const data = await response.json();
 
-      setRecipeDetails(data);  // Store recipe details in the state
-      setSelectedRecipe(recipe);  // Store selected recipe for display in the modal
+      setRecipeDetails(data);
+      setSelectedRecipe(recipe);
     } catch (error) {
       console.error('Error fetching recipe details:', error);
     } finally {
-      setIsModalLoading(false); // Set modal loading state to false once data is fetched
+      setIsModalLoading(false);
     }
   };
 
@@ -81,7 +103,9 @@ const Home = () => {
           <p className="text-xl sm:text-2xl mb-8 animate__animated animate__fadeIn animate__delay-2s">
             Enter your ingredients and discover the perfect dishes.
           </p>
-          <div className="relative w-full max-w-lg mx-auto">
+
+          {/* Search Form */}
+          <div className="relative w-full max-w-lg mx-auto mb-4">
             <input
               type="text"
               className="w-full p-4 pl-12 rounded-full text-black text-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#E5970F]"
@@ -95,6 +119,97 @@ const Home = () => {
             >
               Search
             </button>
+          </div>
+
+          {/* Filters Section */}
+          <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+            {/* Diet */}
+            <select
+              value={diet}
+              onChange={(e) => setDiet(e.target.value)}
+              className="w-full p-4 rounded-full text-black text-xl"
+            >
+              <option value="">Select Diet</option>
+              <option value="vegan">Vegan</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="glutenFree">Gluten-Free</option>
+              <option value="paleo">Paleo</option>
+            </select>
+
+            {/* Cuisines */}
+            <select
+              value={cuisines}
+              onChange={(e) => setCuisines(e.target.value)}
+              className="w-full p-4 rounded-full text-black text-xl"
+            >
+              <option value="">Select Cuisine</option>
+              <option value="Italian">Italian</option>
+              <option value="Indian">Indian</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Mexican">Mexican</option>
+            </select>
+
+            {/* Intolerances */}
+            <select
+              value={intolerances}
+              onChange={(e) => setIntolerances(e.target.value)}
+              className="w-full p-4 rounded-full text-black text-xl"
+            >
+              <option value="">Select Intolerances</option>
+              <option value="dairy">Dairy</option>
+              <option value="egg">Egg</option>
+              <option value="gluten">Gluten</option>
+              <option value="peanut">Peanut</option>
+            </select>
+
+            {/* Meal Type */}
+            <select
+              value={mealType}
+              onChange={(e) => setMealType(e.target.value)}
+              className="w-full p-4 rounded-full text-black text-xl"
+            >
+              <option value="">Select Meal Type</option>
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+
+            {/* Calories */}
+            <div className="w-full flex space-x-2">
+              <input
+                type="number"
+                placeholder="Min Calories"
+                value={minCalories}
+                onChange={(e) => setMinCalories(e.target.value)}
+                className="w-1/2 p-4 rounded-full text-black text-xl"
+              />
+              <input
+                type="number"
+                placeholder="Max Calories"
+                value={maxCalories}
+                onChange={(e) => setMaxCalories(e.target.value)}
+                className="w-1/2 p-4 rounded-full text-black text-xl"
+              />
+            </div>
+
+            {/* Preparation Time */}
+            <div className="w-full flex space-x-2">
+              <input
+                type="number"
+                placeholder="Min Prep Time"
+                value={minPreparationTime}
+                onChange={(e) => setMinPreparationTime(e.target.value)}
+                className="w-1/2 p-4 rounded-full text-black text-xl"
+              />
+              <input
+                type="number"
+                placeholder="Max Prep Time"
+                value={maxPreparationTime}
+                onChange={(e) => setMaxPreparationTime(e.target.value)}
+                className="w-1/2 p-4 rounded-full text-black text-xl"
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -127,11 +242,11 @@ const Home = () => {
                 className="w-full h-56 object-cover"
               />
               <div className="p-6">
-                <h3 className="text-2xl font-semibold text-[#1a1c2b] mb-3">{recipe.title}</h3>
-                <p className="text-gray-600">A delicious recipe based on your ingredients.</p>
+                <h3 className="text-xl font-semibold text-[#380643]">{recipe.title}</h3>
+                <p className="text-sm text-gray-500 mt-2">{recipe.readyInMinutes} mins | {recipe.servings} servings</p>
                 <button
                   onClick={() => handleViewRecipe(recipe)}
-                  className="mt-4 text-[#E5970F] font-semibold hover:underline transition-all duration-200"
+                  className="mt-4 bg-[#E5970F] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#E69A10] transition-all duration-300"
                 >
                   View Recipe
                 </button>
@@ -141,66 +256,53 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Recipe Modal */}
-{selectedRecipe && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-8 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-auto transform transition-all duration-300 ease-in-out scale-95 hover:scale-100 shadow-2xl shadow-black/50">
-      {isModalLoading ? (
-        <div className="text-center text-gray-500 py-8 text-lg">
-          Loading Recipe Details...
+      {/* Modal for Recipe Details */}
+      {selectedRecipe && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg max-w-4xl w-full relative">
+            {isModalLoading ? (
+              <div className="text-center text-[#E5970F]">Loading Recipe...</div>
+            ) : (
+              <>
+                <button
+                  onClick={closeModal}
+                  className="absolute top-4 right-4 text-gray-500 text-2xl"
+                >
+                  ×
+                </button>
+                {recipeDetails && (
+                  <>
+                    <h2 className="text-3xl font-semibold text-[#380643] mb-4">{recipeDetails.title}</h2>
+                    <img
+                      src={recipeDetails.image}
+                      alt={recipeDetails.title}
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                    <div className="mt-4">
+                      <h3 className="text-xl font-semibold text-[#380643]">Ingredients:</h3>
+                      <ul className="list-disc ml-6 mt-2">
+                        {recipeDetails.extendedIngredients.map((ingredient) => (
+                          <li key={ingredient.id} className="text-gray-700">{ingredient.original}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-6">
+                      <h3 className="text-xl font-semibold text-[#380643]">Instructions:</h3>
+                      <p className="text-gray-700">{recipeDetails.instructions}</p>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      ) : (
-        <>
-          {/* Recipe Title */}
-          <h2 className="text-4xl font-semibold text-[#0E1628] mb-6 tracking-wide">
-            {recipeDetails?.title}
-          </h2>
 
-          {/* Recipe Image */}
-          <img
-            src={recipeDetails?.image}
-            alt={recipeDetails?.title}
-            className="w-full h-72 object-cover rounded-xl shadow-md mb-6"
-          />
-
-          {/* Ingredients Section */}
-          <h3 className="text-2xl font-semibold text-[#1a1c2b] mb-4">Ingredients:</h3>
-          <ul className="list-disc pl-5 mb-6 space-y-2">
-            {recipeDetails?.extendedIngredients.map((ingredient) => (
-              <li key={ingredient.id} className="text-gray-700 text-lg">
-                {ingredient.original}
-              </li>
-            ))}
-          </ul>
-
-          {/* Instructions Section */}
-          <h3 className="text-2xl font-semibold text-[#1a1c2b] mb-4">Instructions:</h3>
-          <p className="text-gray-700 text-lg leading-relaxed">
-            {recipeDetails?.instructions || 'Instructions not available'}
-          </p>
-
-          {/* Close Modal Button */}
-          <button
-            onClick={closeModal}
-            className="mt-6 bg-[#E5970F] text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-[#E69A10] transition-all duration-300 ease-in-out shadow-lg transform hover:scale-105"
-          >
-            Close
-          </button>
-        </>
       )}
-    </div>
-  </div>
-)}
-
-
-      {/* Footer */}
-      <footer className="text-center py-8 bg-[#0E1628] text-gray-400">
-        <p>&copy; 2025 Recipe Finder. All rights reserved.</p>
-        <div className="mt-4">
-          <a href="#" className="text-[#E5970F] hover:underline">Privacy Policy</a> | 
-          <a href="#" className="text-[#E5970F] hover:underline">Terms of Service</a>
-        </div>
-      </footer>
+      <RandomRecipes />
+      <TrendingRecipe />
+      <MealPlanning />
+      <FoodTrivia />
+      <PriceBreakdown/>
     </div>
   );
 };
