@@ -1,6 +1,6 @@
 # Insta Recipe
 
-Live Preview: [Insta Recipe](https://insta-recipe.netlify.app/)
+Live Preview: https://insta-recipe.netlify.app/
 
 Insta Recipe is a modern recipe-sharing web application built with **Next.js**. It allows users to discover, share, and save their favorite recipes with a user-friendly interface.
 
