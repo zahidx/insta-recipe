@@ -6,16 +6,24 @@ const RandomRecipes = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedRecipe, setSelectedRecipe] = useState(null); // For holding selected recipe
-  const [recipeDetails, setRecipeDetails] = useState(null); // For holding detailed recipe information
-  const [isModalLoading, setIsModalLoading] = useState(false); // To handle modal loading state
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [recipeDetails, setRecipeDetails] = useState(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
+
+  const [cuisine, setCuisine] = useState("");
+  const [diet, setDiet] = useState("");
+  const [prepTime, setPrepTime] = useState("");
 
   const handleSurpriseMe = async () => {
     setLoading(true);
     setError("");
 
     const apiKey = process.env.NEXT_PUBLIC_SPOONACULAR_API_KEY;
-    const url = `https://api.spoonacular.com/recipes/random?apiKey=${apiKey}&number=8`;
+    let url = `https://api.spoonacular.com/recipes/random?apiKey=${apiKey}&number=8`;
+
+    if (cuisine) url += `&tags=${cuisine}`;
+    if (diet) url += `&diet=${diet}`;
+    if (prepTime) url += `&maxReadyTime=${prepTime}`;
 
     try {
       const response = await fetch(url);
@@ -44,13 +52,12 @@ const RandomRecipes = () => {
       const response = await fetch(url);
       const data = await response.json();
 
-      // Parse and clean up the instructions (convert <ol>, <ul>, etc. to plain text)
       const cleanedInstructions = data.instructions
-        ? data.instructions.replace(/<[^>]*>/g, "") // Remove HTML tags
+        ? data.instructions.replace(/<[^>]*>/g, "")
         : "Instructions not available";
 
-      setRecipeDetails({ ...data, instructions: cleanedInstructions }); // Store cleaned details
-      setSelectedRecipe(recipe); // Store selected recipe for display in the modal
+      setRecipeDetails({ ...data, instructions: cleanedInstructions });
+      setSelectedRecipe(recipe);
     } catch (error) {
       console.error("Error fetching recipe details:", error);
     } finally {
@@ -70,16 +77,49 @@ const RandomRecipes = () => {
         <meta name="description" content="Discover random recipes with the Surprise Me feature." />
       </Head>
 
-      {/* Hero Section */}
       <header className="relative w-full h-screen bg-cover bg-center" style={{ backgroundImage: 'url(https://via.placeholder.com/1500x800)' }}>
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="relative z-10 container mx-auto h-full flex flex-col justify-center items-center text-center px-4">
-          <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6 animate__animated animate__fadeIn animate__delay-1s text-[#E5970F]">
+          <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6 text-[#E5970F]">
             Discover Random Recipes
           </h1>
-          <p className="text-xl sm:text-2xl mb-8 animate__animated animate__fadeIn animate__delay-2s">
+          <p className="text-xl sm:text-2xl mb-8">
             Click "Surprise Me" to explore delicious recipes.
           </p>
+
+          <div className="mb-6 flex flex-wrap gap-4 justify-center">
+            <select
+              className="bg-gray-700 text-white px-4 py-2 rounded"
+              value={cuisine}
+              onChange={(e) => setCuisine(e.target.value)}
+            >
+              <option value="">Cuisine</option>
+              <option value="italian">Italian</option>
+              <option value="mexican">Mexican</option>
+              <option value="indian">Indian</option>
+              <option value="chinese">Chinese</option>
+            </select>
+
+            <select
+              className="bg-gray-700 text-white px-4 py-2 rounded"
+              value={diet}
+              onChange={(e) => setDiet(e.target.value)}
+            >
+              <option value="">Diet</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="vegan">Vegan</option>
+              <option value="gluten free">Gluten Free</option>
+            </select>
+
+            <input
+              type="number"
+              placeholder="Max Prep Time (mins)"
+              className="bg-gray-700 text-white px-4 py-2 rounded"
+              value={prepTime}
+              onChange={(e) => setPrepTime(e.target.value)}
+            />
+          </div>
+
           <button
             onClick={handleSurpriseMe}
             className="bg-[#E5970F] text-white px-8 py-4 rounded-full font-semibold text-xl hover:bg-[#E69A10] transition-all duration-300 shadow-lg transform hover:scale-105"
@@ -89,7 +129,6 @@ const RandomRecipes = () => {
         </div>
       </header>
 
-      {/* Error/Loading State */}
       {loading && (
         <div className="text-center text-white py-4">
           <p>Loading...</p>
@@ -102,7 +141,6 @@ const RandomRecipes = () => {
         </div>
       )}
 
-      {/* Recipes Grid */}
       <section className="py-20 bg-[#1a1c2b]">
         <div className="container mx-auto text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-[#E5970F]">Random Recipes</h2>
@@ -128,29 +166,21 @@ const RandomRecipes = () => {
         </div>
       </section>
 
-      {/* Recipe Modal */}
       {selectedRecipe && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-auto transform transition-all duration-300 ease-in-out scale-95 hover:scale-100 shadow-2xl shadow-black/50">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-auto">
             {isModalLoading ? (
               <div className="text-center text-gray-500 py-8 text-lg">
                 Loading Recipe Details...
               </div>
             ) : (
               <>
-                {/* Recipe Title */}
-                <h2 className="text-4xl font-semibold text-[#0E1628] mb-6 tracking-wide">
-                  {recipeDetails?.title}
-                </h2>
-
-                {/* Recipe Image */}
+                <h2 className="text-4xl font-semibold text-[#0E1628] mb-6">{recipeDetails?.title}</h2>
                 <img
                   src={recipeDetails?.image}
                   alt={recipeDetails?.title}
                   className="w-full h-72 object-cover rounded-xl shadow-md mb-6"
                 />
-
-                {/* Ingredients Section */}
                 <h3 className="text-2xl font-semibold text-[#1a1c2b] mb-4">Ingredients:</h3>
                 <ul className="list-disc pl-5 mb-6 space-y-2">
                   {recipeDetails?.extendedIngredients.map((ingredient) => (
@@ -159,17 +189,13 @@ const RandomRecipes = () => {
                     </li>
                   ))}
                 </ul>
-
-                {/* Instructions Section */}
                 <h3 className="text-2xl font-semibold text-[#1a1c2b] mb-4">Instructions:</h3>
                 <p className="text-gray-700 text-lg leading-relaxed">
                   {recipeDetails?.instructions}
                 </p>
-
-                {/* Close Modal Button */}
                 <button
                   onClick={closeModal}
-                  className="mt-6 bg-[#E5970F] text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-[#E69A10] transition-all duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                  className="mt-6 bg-[#E5970F] text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-[#E69A10] transition-all duration-300"
                 >
                   Close
                 </button>
@@ -179,11 +205,10 @@ const RandomRecipes = () => {
         </div>
       )}
 
-      {/* Footer */}
       <footer className="text-center py-8 bg-[#0E1628] text-gray-400">
         <p>&copy; 2025 Random Recipes. All rights reserved.</p>
         <div className="mt-4">
-          <a href="#" className="text-[#E5970F] hover:underline">Privacy Policy</a> | 
+          <a href="#" className="text-[#E5970F] hover:underline">Privacy Policy</a> |
           <a href="#" className="text-[#E5970F] hover:underline">Terms of Service</a>
         </div>
       </footer>
